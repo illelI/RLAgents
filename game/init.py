@@ -1,38 +1,34 @@
 import pygame
-from menu import MainMenu
+from player import Player
+from menu import Menu
+
+def play(dt):
+    screen.fill("white")
+    player.move(dt)
+
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
+screen.fill("white")
 running = True
 clock = pygame.time.Clock()
 dt = 0
 
-menu = MainMenu(pygame)
-
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+player = Player(screen)
+menu = Menu(screen)
 
 while running:
+    dt = clock.tick(60) / 1000
+    pygame.display.flip()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        menu.handle_events(event)
+    if menu.play:
+        play(dt)
+    else:
+        menu.draw()
 
-    menu.drawMenu()
 
-    screen.fill("white")
-    pygame.draw.circle(screen, "red", player_pos, 5)
-
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        player_pos.y -= 300 * dt
-    if keys[pygame.K_s]:
-        player_pos.y += 300 * dt
-    if keys[pygame.K_a]:
-        player_pos.x -= 300 * dt
-    if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
-    
-    pygame.display.flip()
-
-    dt = clock.tick(60) / 1000
 
 pygame.quit()
