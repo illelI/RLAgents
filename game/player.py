@@ -10,11 +10,11 @@ class Player:
         pygame.draw.circle(self.screen, "red", self.player_pos, 5)
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
+        if keys[pygame.K_w] and self.player_pos.y > 1:
             self.player_pos.y -= 300 * dt
-        if keys[pygame.K_s]:
+        if keys[pygame.K_s] and self.player_pos.y < self.screen.get_height():
             self.player_pos.y += 300 * dt
-        if keys[pygame.K_a]:
+        if keys[pygame.K_a] and self.player_pos.x > 0:
             self.player_pos.x -= 300 * dt
-        if keys[pygame.K_d]:
+        if keys[pygame.K_d] and self.player_pos.x < self.screen.get_width() - 1:
             self.player_pos.x += 300 * dt

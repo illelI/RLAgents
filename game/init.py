@@ -1,10 +1,11 @@
 import pygame
 from player import Player
 from menu import Menu
+from game import Game
 
-def play(dt):
+def play(dt, game, screen):
     screen.fill("white")
-    player.move(dt)
+    game.play(dt)
 
 
 pygame.init()
@@ -16,6 +17,7 @@ dt = 0
 
 player = Player(screen)
 menu = Menu(screen)
+game = None
 
 while running:
     dt = clock.tick(60) / 1000
@@ -24,8 +26,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         menu.handle_events(event)
-    if menu.play:
-        play(dt)
+    if menu.play and game is None:
+        game = Game(player, screen)
+    elif menu.play and game:
+        play(dt, game, screen)
     else:
         menu.draw()
 
