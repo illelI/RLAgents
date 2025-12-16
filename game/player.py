@@ -6,6 +6,9 @@ class Player:
         self.screen = screen
         self.player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
+    def get_position(self):
+        return self.player_pos
+
     def move(self, dt):
         pygame.draw.circle(self.screen, "red", self.player_pos, 5)
 

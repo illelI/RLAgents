@@ -27,8 +27,9 @@ while running:
             running = False
         menu.handle_events(event)
     if menu.play and game is None:
-        game = Game(player, screen)
+        game = Game(player, screen, dt)
     elif menu.play and game:
+        game.set_dt(dt)
         play(dt, game, screen)
     else:
         menu.draw()
