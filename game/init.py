@@ -15,7 +15,7 @@ running = True
 clock = pygame.time.Clock()
 dt = 0
 
-player = Player(screen)
+player = Player(screen, False)
 menu = Menu(screen)
 game = None
 

@@ -12,6 +12,7 @@ class Game:
         self.screen = screen
         self.enemies = []
         self.dt = dt
+        self.running = True
         if seed is not None:
             random.seed(seed)
 
@@ -24,7 +25,11 @@ class Game:
 
     def play(self, dt):
         self.player.move(dt)
+        self.player.update_bullets(dt)
+        self.player.draw_bullets()
         self.move_enemies()
+        self.check_bullet_collisions()
+        self.enemies_gc()
         self.show_timer()
 
     def show_timer(self):
@@ -39,7 +44,7 @@ class Game:
         self.screen.blit(text_surface, text_rect)
 
     def spawn_enemies(self):
-        while True:
+        while self.running:
             delay = -0.0011 * (time.time() - self.start_time) + 2
             x, y = 0, 0
             spawn_direction = random.randint(0, 3) #clockwise
@@ -62,6 +67,19 @@ class Game:
     def move_enemies(self):
         for enemy in self.enemies:
             enemy.move(self.player.get_position())
+
+    def check_bullet_collisions(self):
+        bullets_to_remove = []
+        for bullet in self.player.bullets[:]:
+            for enemy in self.enemies:
+                if bullet.check_collision(enemy):
+                    enemy.take_damage(bullet.damage)
+                    bullets_to_remove.append(bullet)
+                    break
+            
+        for bullet in bullets_to_remove:
+            if bullet in self.player.bullets:
+                self.player.bullets.remove(bullet)
 
     def enemies_gc(self):
         for i in range(len(self.enemies) - 1, -1, -1):

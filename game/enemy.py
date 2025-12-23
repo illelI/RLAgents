@@ -27,4 +27,8 @@ class Enemy:
                direction_y /= distance
                self.position.x += direction_x * self.speed
                self.position.y += direction_y * self.speed
-    
+               
+    def take_damage(self, amount):
+        self.hp -= amount
+        if self.hp <= 0:
+            self.hp = 0
