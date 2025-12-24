@@ -13,22 +13,18 @@ class Bullet:
         self.pos.x += math.cos(self.angle) * 400 * dt
         self.pos.y += math.sin(self.angle) * 400 * dt
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, (0, 0, 0), (int(self.pos.x), int(self.pos.y)), 2)
-
     def check_collision(self, enemy):
         distance = math.sqrt((self.pos.x - enemy.position.x) ** 2 + (self.pos.y - enemy.position.y) ** 2)
         return distance < 10
 
 class Player:
-    def __init__(self, screen, isAgent):
-        self.screen = screen
+    def __init__(self, pos_x, pos_y, isAgent):
         self.hp = 100
         self.shoot_speed = 1
         self.move_speed = 300
         self.dmg = 35
         self.bullets = []
-        self.player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+        self.player_pos = pygame.Vector2(pos_x, pos_y)
         self.isAgent = isAgent
         self.aim_x, self.aim_y = 0, 0
         self.shoot_thread = threading.Thread(target=self.shoot)
@@ -37,18 +33,19 @@ class Player:
 
     def get_position(self):
         return self.player_pos
+    
+    def get_bullets(self):
+        return self.bullets
 
     def move(self, dt):
-        pygame.draw.circle(self.screen, "red", self.player_pos, 5)
-
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] and self.player_pos.y > 1:
             self.player_pos.y -= self.move_speed * dt
-        if keys[pygame.K_s] and self.player_pos.y < self.screen.get_height():
+        if keys[pygame.K_s] and self.player_pos.y < 720:
             self.player_pos.y += self.move_speed * dt
         if keys[pygame.K_a] and self.player_pos.x > 0:
             self.player_pos.x -= self.move_speed * dt
-        if keys[pygame.K_d] and self.player_pos.x < self.screen.get_width() - 1:
+        if keys[pygame.K_d] and self.player_pos.x < 1279:
             self.player_pos.x += self.move_speed * dt
 
     def shoot(self):
@@ -62,14 +59,15 @@ class Player:
             angle = math.atan2(direction.y, direction.x)
             self.bullets.append(Bullet(self.player_pos.x, self.player_pos.y, angle, self.dmg))
 
+    def __is_bullet_on_screen(self, bullet):
+        if bullet.pos.x < 0 or bullet.pos.x > 1280:
+            return False
+        if bullet.pos.y < 0 or bullet.pos.y > 720:
+            return False
+        return True
 
     def update_bullets(self, dt):
         for bullet in self.bullets[:]:
             bullet.update(dt)
-            if not self.screen.get_rect().collidepoint(bullet.pos.x, bullet.pos.y):
+            if not self.__is_bullet_on_screen(bullet):
                 self.bullets.remove(bullet)
-
-    def draw_bullets(self):
-        for bullet in self.bullets:
-            bullet.draw(self.screen)
-            

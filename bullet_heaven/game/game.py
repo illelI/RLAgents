@@ -6,10 +6,9 @@ from enemy import Enemy
 
 class Game:
 
-    def __init__(self, player, screen, dt, seed=None):
+    def __init__(self, player, dt, seed=None):
         self.start_time = time.time()
         self.player = player
-        self.screen = screen
         self.enemies = []
         self.dt = dt
         self.running = True
@@ -23,25 +22,19 @@ class Game:
     def set_dt(self, dt):
         self.dt = dt
 
+    def get_enemies(self):
+        return self.enemies
+    
+    def get_time(self):
+        current_time = time.time() - self.start_time
+        return int(current_time // 60), int(current_time % 60)
+
     def play(self, dt):
         self.player.move(dt)
         self.player.update_bullets(dt)
-        self.player.draw_bullets()
         self.move_enemies()
         self.check_bullet_collisions()
         self.enemies_gc()
-        self.show_timer()
-
-    def show_timer(self):
-        current_time = time.time() - self.start_time
-        mins = int(current_time // 60)
-        secs = int(current_time % 60)
-        time_str = f"{mins:02}:{secs:02}"
-        font = pygame.font.SysFont(None, 48)
-        text_surface = font.render(time_str, True, (79, 75, 75))
-        text_surface.set_alpha(128)
-        text_rect = text_surface.get_rect(center=(self.screen.get_width() // 2, 50))
-        self.screen.blit(text_surface, text_rect)
 
     def spawn_enemies(self):
         while self.running:
@@ -50,18 +43,17 @@ class Game:
             spawn_direction = random.randint(0, 3) #clockwise
             if spawn_direction == 0:
                 y = -10
-                x = random.randint(-10, self.screen.get_width() + 10)
+                x = random.randint(-10, 1290)
             elif spawn_direction == 1:
-                x = self.screen.get_width() + 10
-                y = random.randint(-10, self.screen.get_height() + 10)
+                x = 1290
+                y = random.randint(-10, 730)
             elif spawn_direction == 2:
-                y = self.screen.get_height() + 10
-                x = random.randint(-10, self.screen.get_width() + 10)
+                y = 730
+                x = random.randint(-10, 1290)
             else:
                 x = -10
-                y = random.randint(-10, self.screen.get_height() + 10)
-
-            self.enemies.append(Enemy(pygame.Vector2(x, y), self.dt, (time.time() - self.start_time)//60, self.screen))
+                y = random.randint(-10, 730)
+            self.enemies.append(Enemy(pygame.Vector2(x, y), self.dt, (time.time() - self.start_time)//60))
             time.sleep(delay)
     
     def move_enemies(self):
