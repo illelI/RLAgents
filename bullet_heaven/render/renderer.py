@@ -2,6 +2,7 @@ import pygame
 
 class Renderer:
     def __init__(self):
+        pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
         self.screen.fill("white")
 
@@ -24,10 +25,14 @@ class Renderer:
         text_rect = text_surface.get_rect(center=(self.screen.get_width() // 2, 50))
         self.screen.blit(text_surface, text_rect)
 
-    def draw(self, player_pos, bullets, enemies, mins, secs):
+    def render(self, player_pos, bullets, enemies, mins=0, secs=0):
+        pygame.event.pump()
         pygame.display.flip()
         self.screen.fill("white")
         self.__draw_player(player_pos)
         self.__draw_bullets(bullets)
         self.__draw_enemies(enemies)
         self.__draw_timer(mins, secs)
+
+    def close(self):
+        pygame.quit()

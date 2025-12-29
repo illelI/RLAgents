@@ -1,4 +1,3 @@
-import pygame
 import math
 
 class Enemy:
@@ -6,7 +5,8 @@ class Enemy:
     baseSpeed = 100
     def __init__(self, position ,dt, minutes):
           self.position = position
-          self.hp = self.calculateHP(minutes)
+          self.max_hp = self.calculateHP(minutes)
+          self.hp = self.max_hp
           self.speed = self.calculateSpeed(dt, minutes)
 
     def calculateHP(self, minutes):

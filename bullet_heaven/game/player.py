@@ -1,6 +1,4 @@
 import pygame
-import threading
-import time
 import math
 
 class Bullet:
@@ -14,50 +12,67 @@ class Bullet:
         self.pos.y += math.sin(self.angle) * 400 * dt
 
     def check_collision(self, enemy):
-        distance = math.sqrt((self.pos.x - enemy.position.x) ** 2 + (self.pos.y - enemy.position.y) ** 2)
-        return distance < 10
+        return self.pos.distance_to(enemy.position) < 10
 
 class Player:
     def __init__(self, pos_x, pos_y, isAgent):
-        self.hp = 100
-        self.shoot_speed = 1
+        self.max_hp = 100
+        self.hp = self.max_hp
+        self.shoot_cooldown = 1
+        self.shoot_timer = 0.0
         self.move_speed = 300
         self.dmg = 35
         self.bullets = []
         self.player_pos = pygame.Vector2(pos_x, pos_y)
+        self.aim_angle = 0.0
+        self.isShooting = False
+        self.move_dir = pygame.Vector2(0, 0)
         self.isAgent = isAgent
-        self.aim_x, self.aim_y = 0, 0
-        self.shoot_thread = threading.Thread(target=self.shoot)
-        self.shoot_thread.daemon = True
-        self.shoot_thread.start()
 
     def get_position(self):
         return self.player_pos
     
     def get_bullets(self):
         return self.bullets
+    
+    def apply_action(self, action):
+        move, aim = action
+        directions = [
+            (0, 0),
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1)
+        ]
+
+        dx, dy = directions[move]
+        self.move_dir = pygame.Vector2(dx, dy)
+        if self.move_dir.length() > 0:
+            self.move_dir = self.move_dir.normalize()
+        self.aim_angle = (aim / 32) * 2 * math.pi
 
     def move(self, dt):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w] and self.player_pos.y > 1:
-            self.player_pos.y -= self.move_speed * dt
-        if keys[pygame.K_s] and self.player_pos.y < 720:
-            self.player_pos.y += self.move_speed * dt
-        if keys[pygame.K_a] and self.player_pos.x > 0:
-            self.player_pos.x -= self.move_speed * dt
-        if keys[pygame.K_d] and self.player_pos.x < 1279:
-            self.player_pos.x += self.move_speed * dt
+        self.player_pos += self.move_dir * self.move_speed * dt
+        self.player_pos.x = max(0, min(1279, self.player_pos.x))
+        self.player_pos.y = max(0, min(719, self.player_pos.y))
 
-    def shoot(self):
-        while True:
-            time.sleep(self.shoot_speed)
-            if not self.isAgent:
-                aim_x, aim_y = pygame.mouse.get_pos()
-            else:
-                aim_x, aim_y = self.aim_x, self.aim_y
-            direction = pygame.Vector2(aim_x - self.player_pos.x, aim_y - self.player_pos.y)
-            angle = math.atan2(direction.y, direction.x)
-            self.bullets.append(Bullet(self.player_pos.x, self.player_pos.y, angle, self.dmg))
+    def shoot(self, dt):
+        self.shoot_timer -= dt
+
+        if self.shoot_timer <= 0:
+            self.shoot_timer = self.shoot_cooldown
+            self.bullets.append(
+                Bullet(
+                    self.player_pos.x,
+                    self.player_pos.y,
+                    self.aim_angle,
+                    self.dmg
+                )
+            )
 
     def __is_bullet_on_screen(self, bullet):
         if bullet.pos.x < 0 or bullet.pos.x > 1280:
@@ -71,3 +86,8 @@ class Player:
             bullet.update(dt)
             if not self.__is_bullet_on_screen(bullet):
                 self.bullets.remove(bullet)
+
+    def update(self, dt):
+        self.move(dt)
+        self.shoot(dt)
+        self.update_bullets(dt)
