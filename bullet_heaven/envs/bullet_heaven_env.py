@@ -18,9 +18,9 @@ class BulletHeavenEnv(gym.Env):
         self.state = None
         #moving, shooting and choosing an upgrade
         self.action_space = spaces.MultiDiscrete([9, 32, 4])
-        #Observations:
         #player: x, y, speed, dmg, hp, shoot_cooldown - 5
         #enemies: x, y, hp x15 - 45
+        #todo: xp: x, y x15 - 30
         self.observation_space = spaces.Box(
             low=-1.0,
             high=1.0,
@@ -38,7 +38,7 @@ class BulletHeavenEnv(gym.Env):
         obs[2] = self.player.move_speed
         obs[3] = self.player.dmg
         obs[4] = self.player.hp / self.player.max_hp
-
+        #todo: closest 15
         for i, enemy in enumerate(self.game.enemies[:15]):
             idx = 5 + i * 3
             obs[idx]     = enemy.position.x / 1280
@@ -55,6 +55,7 @@ class BulletHeavenEnv(gym.Env):
         info = {}
         return self.state, info
     
+    #todo
     def step(self, action):
         self.player.apply_action(action[:2])
         self.game.update(self.dt)

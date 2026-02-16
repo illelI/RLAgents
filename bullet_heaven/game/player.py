@@ -19,21 +19,16 @@ class Player:
         self.max_hp = 100
         self.hp = self.max_hp
         self.shoot_cooldown = 1
+        self.dmg_cooldown = 1
         self.shoot_timer = 0.0
         self.move_speed = 300
         self.dmg = 35
         self.bullets = []
-        self.player_pos = pygame.Vector2(pos_x, pos_y)
+        self.position = pygame.Vector2(pos_x, pos_y)
         self.aim_angle = 0.0
         self.isShooting = False
         self.move_dir = pygame.Vector2(0, 0)
         self.isAgent = isAgent
-
-    def get_position(self):
-        return self.player_pos
-    
-    def get_bullets(self):
-        return self.bullets
     
     def apply_action(self, action):
         move, aim = action
@@ -56,9 +51,9 @@ class Player:
         self.aim_angle = (aim / 32) * 2 * math.pi
 
     def move(self, dt):
-        self.player_pos += self.move_dir * self.move_speed * dt
-        self.player_pos.x = max(0, min(1279, self.player_pos.x))
-        self.player_pos.y = max(0, min(719, self.player_pos.y))
+        self.position += self.move_dir * self.move_speed * dt
+        self.position.x = max(0, min(1279, self.position.x))
+        self.position.y = max(0, min(719, self.position.y))
 
     def shoot(self, dt):
         self.shoot_timer -= dt
@@ -67,8 +62,8 @@ class Player:
             self.shoot_timer = self.shoot_cooldown
             self.bullets.append(
                 Bullet(
-                    self.player_pos.x,
-                    self.player_pos.y,
+                    self.position.x,
+                    self.position.y,
                     self.aim_angle,
                     self.dmg
                 )
@@ -88,6 +83,12 @@ class Player:
                 self.bullets.remove(bullet)
 
     def update(self, dt):
+        self.dmg_cooldown -= dt
         self.move(dt)
         self.shoot(dt)
         self.update_bullets(dt)
+
+    def take_dmg(self, dmg):
+        if self.dmg_cooldown < 0:
+            self.dmg_cooldown = 1
+            self.hp -= dmg

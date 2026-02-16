@@ -1,16 +1,16 @@
 import pygame
-from player import Player
-from game import Game
+from game.player import Player
+from game.game import Game
 import math
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from render.renderer import Renderer
 
-def aim(player_pos):
+def aim(position):
     mouse_pos = pygame.mouse.get_pos()
-    dx = mouse_pos[0] - player_pos[0]
-    dy = mouse_pos[1] - player_pos[1]
+    dx = mouse_pos[0] - position[0]
+    dy = mouse_pos[1] - position[1]
     angle = math.atan2(dy, dx)
     if angle < 0:
         angle += 2 * math.pi
@@ -24,13 +24,13 @@ def quantize_angle(angle, directions=32):
 def get_move(player):
     keys = pygame.key.get_pressed()
     x, y = 0, 0
-    if keys[pygame.K_w] and player.player_pos.y > 1:
+    if keys[pygame.K_w] and player.position.y > 1:
         y = -1
-    if keys[pygame.K_s] and player.player_pos.y < 720:
+    if keys[pygame.K_s] and player.position.y < 720:
         y = 1
-    if keys[pygame.K_a] and player.player_pos.x > 0:
+    if keys[pygame.K_a] and player.position.x > 0:
         x = -1
-    if keys[pygame.K_d] and player.player_pos.x < 1279:
+    if keys[pygame.K_d] and player.position.x < 1279:
         x = 1
     idx = 0
     if x == 0 and y == -1:
@@ -52,13 +52,15 @@ def get_move(player):
     return idx
 
 def play(dt, game):
+    if game.player.hp <= 0:
+        pygame.quit()
     move = get_move(game.player)
-    aim_index = quantize_angle(aim(game.player.player_pos))
+    aim_index = quantize_angle(aim(game.player.position))
     action = [move, aim_index]
     game.player.apply_action(action)
     game.update(dt)
     mins, secs = game.get_time()
-    renderer.render(player.get_position(), player.get_bullets(), game.get_enemies(), mins, secs)
+    renderer.render(player.position, player.bullets, game.enemies, mins, secs)
 
 
 renderer = Renderer()

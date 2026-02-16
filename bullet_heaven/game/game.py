@@ -1,6 +1,6 @@
 import pygame
 import random
-from enemy import Enemy
+from game.enemy import Enemy
 
 class Game:
 
@@ -18,9 +18,6 @@ class Game:
 
     def set_dt(self, dt):
         self.dt = dt
-
-    def get_enemies(self):
-        return self.enemies
     
     def get_time(self):
         mins = int(self.elapsed_time // 60)
@@ -58,7 +55,7 @@ class Game:
     
     def move_enemies(self):
         for enemy in self.enemies:
-            enemy.move(self.player.get_position())
+            enemy.move(self.player, self.enemies)
 
     def check_bullet_collisions(self):
         bullets_to_remove = []
