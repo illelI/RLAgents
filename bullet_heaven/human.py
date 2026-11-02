@@ -51,16 +51,21 @@ def get_move(player):
         idx = 8
     return idx
 
+def choose_stat(player):
+    if player.stat_points == 0:
+        return 0
+    return renderer.upgrade_window()
+    
+
 def play(dt, game):
-    if game.player.hp <= 0:
-        pygame.quit()
+    mins, secs = game.get_time()
+    renderer.render(player, game.enemies, game.xp ,mins, secs)
     move = get_move(game.player)
     aim_index = quantize_angle(aim(game.player.position))
-    action = [move, aim_index]
+    choosen_stat = choose_stat(game.player)
+    action = [move, aim_index, choosen_stat]
     game.player.apply_action(action)
-    game.update(dt)
-    mins, secs = game.get_time()
-    renderer.render(player.position, player.bullets, game.enemies, mins, secs)
+    game.update(dt)   
 
 
 renderer = Renderer()
@@ -68,7 +73,7 @@ running = True
 clock = pygame.time.Clock()
 dt = 0
 
-player = Player(640, 360, False)
+player = Player(640, 360)
 game = None
 
 while running:
@@ -80,7 +85,10 @@ while running:
         game = Game(player, dt)
     else:
         game.set_dt(dt)
-        play(dt, game)
+        if game.player.hp > 0:
+            play(dt, game)
+        else:
+            break
 
 
 pygame.quit()

@@ -2,17 +2,19 @@ import pygame
 import random
 from game.enemy import Enemy
 
-class Game:
 
+class Game:
     def __init__(self, player, dt, seed=None):
         self.start_time = 0.0
         self.player = player
         self.enemies = []
+        self.xp = []
         self.dt = dt
         self.running = True
         self.start_time = 0.0
         self.elapsed_time = 0.0
         self.spawn_timer = 0.0
+        self.enemies_killed = 0
         if seed is not None:
             random.seed(seed)
 
@@ -28,10 +30,17 @@ class Game:
         self.elapsed_time += dt
         self.spawn_timer += dt
         self.player.update(dt)
+        self.checkXP()
         self.spawn_enemies(dt)
         self.move_enemies()
         self.check_bullet_collisions()
         self.enemies_gc()
+
+    def checkXP(self):
+        for i in range(len(self.xp) - 1, -1, -1):
+            if self.player.position.distance_to(self.xp[i]) < 10:
+                self.player.get_xp()
+                del self.xp[i]
 
     def spawn_enemies(self, dt):
         delay = -0.0011 * self.elapsed_time + 2
@@ -73,4 +82,6 @@ class Game:
     def enemies_gc(self):
         for i in range(len(self.enemies) - 1, -1, -1):
             if self.enemies[i].hp <= 0:
+                self.xp.append(self.enemies[i].position)
                 del self.enemies[i]
+                self.enemies_killed += 1

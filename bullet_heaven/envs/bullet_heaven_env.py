@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from bullet_heaven.envs.reward import RewardCalc
 from render.renderer import Renderer
 from game.game import Game
 from game.player import Player
@@ -17,33 +18,51 @@ class BulletHeavenEnv(gym.Env):
         self.dt = 1/60
         self.state = None
         #moving, shooting and choosing an upgrade
-        self.action_space = spaces.MultiDiscrete([9, 32, 4])
-        #player: x, y, speed, dmg, hp, shoot_cooldown - 5
+        self.action_space = spaces.MultiDiscrete([9, 32, 8])
+        #player: x, y, speed, dmg, dmg_cooldown, hp, shoot_cooldown, regen, xp multiplier, stat_points - 10
         #enemies: x, y, hp x15 - 45
-        #todo: xp: x, y x15 - 30
+        #xp: x, y x15 - 30
         self.observation_space = spaces.Box(
-            low=-1.0,
+            low=0.0,
             high=1.0,
-            shape=(50,),
+            shape=(83,),
             dtype=np.float32
         )
+
+        self.reward_calc = RewardCalc()
 
         self.player = Player(640, 360, True)
         self.game = Game(self.player, self.dt)
 
     def __get_observation(self):
-        obs = np.zeros(50, dtype=np.float32)
+        obs = np.zeros(83, dtype=np.float32)
         px, py = self.player.get_position()
         obs[0:2] = px / 1280, py / 720
-        obs[2] = self.player.move_speed
-        obs[3] = self.player.dmg
-        obs[4] = self.player.hp / self.player.max_hp
-        #todo: closest 15
-        for i, enemy in enumerate(self.game.enemies[:15]):
-            idx = 5 + i * 3
-            obs[idx]     = enemy.position.x / 1280
+        obs[2] = np.clip(self.player.move_speed / 600, 0, 1)
+        obs[3] = np.clip(self.player.dmg / 200, 0, 1)
+        obs[4] = 1 - np.clip(self.player.dmg_cooldown, 0, 1)
+        obs[5] = self.player.hp / self.player.max_hp
+        obs[6] = 1 - np.clip(self.player.shoot_cooldown, 0, 1)
+        obs[7] = np.clip(self.player.stat_points, 0, 1)
+
+        enemies = sorted(
+            self.game.enemies,
+            key=lambda e: self.player.position.distance_to(e.position)
+            )[:15]
+        for i, enemy in enumerate(enemies):
+            idx = 10 + i * 3
+            obs[idx] = enemy.position.x / 1280
             obs[idx + 1] = enemy.position.y / 720
             obs[idx + 2] = enemy.hp / enemy.max_hp
+
+        xps = sorted(
+            self.game.xp,
+            key=lambda e: self.player.position.distance_to(e.position)
+        )[:15]
+        for i, xp in enumerate(xps):
+            idx = 55 + i * 2
+            obs[idx] = xp.position.x / 1280
+            obs[idx + 1] = xp.position.y / 720
 
         return obs
 
@@ -53,6 +72,7 @@ class BulletHeavenEnv(gym.Env):
         self.game = Game(self.player, self.dt, seed=seed)
         self.state = np.zeros(self.observation_space.shape, dtype=np.float32)
         info = {}
+        self.reward_calculator.reset(self.player, self.game)
         return self.state, info
     
     #todo
@@ -60,10 +80,13 @@ class BulletHeavenEnv(gym.Env):
         self.player.apply_action(action[:2])
         self.game.update(self.dt)
         self.state = self.__get_observation()
-        reward = 0.0
         terminated = self.player.hp <=0
         truncated = False
-        return self.state, reward, terminated, truncated, {}
+        reward, info = self.reward_calculator.calculate(
+            self.player,
+            self.game,
+            terminated)
+        return self.state, reward, terminated, truncated, info
     
 
     def get_render_info(self):
