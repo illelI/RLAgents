@@ -17,12 +17,10 @@ class RewardCalc:
 
     def reset(self, player, game):
         self.previous_kills = game.enemies_killed
-        self.previous_xp = player.total_xp_collected
-        self.previous_damage = player.total_damage_taken
+        self.previous_xp = player.xp_collected
+        self.previous_damage = player.dmg_taken
 
-    def calculate(self, game, player, terminated):
-        reward = 0.0
-
+    def calculate(self, player, game, terminated):
         kills = game.enemies_killed - self.previous_kills
         xp = player.xp_collected - self.previous_xp
         damage = player.dmg_taken - self.previous_damage

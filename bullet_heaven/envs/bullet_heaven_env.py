@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from bullet_heaven.envs.logger import Logger
 from bullet_heaven.envs.reward import RewardCalc
 from render.renderer import Renderer
 from game.game import Game
@@ -12,7 +13,7 @@ from game.player import Player
 class BulletHeavenEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 60}
 
-    def __init__(self, render_mode=None):
+    def __init__(self, algorithm, seed, render_mode=None):
         super().__init__()
         self.render_mode = render_mode
         self.dt = 1/60
@@ -30,6 +31,7 @@ class BulletHeavenEnv(gym.Env):
         )
 
         self.reward_calc = RewardCalc()
+        self.logger = Logger(algorithm, seed=seed)
 
         self.player = Player(640, 360, True)
         self.game = Game(self.player, self.dt)
@@ -70,19 +72,19 @@ class BulletHeavenEnv(gym.Env):
         super().reset(seed=seed, options=options)
         self.player = Player(640, 360, True)
         self.game = Game(self.player, self.dt, seed=seed)
-        self.state = np.zeros(self.observation_space.shape, dtype=np.float32)
+        self.state = self.__get_observation()
+        #self.state = np.zeros(self.observation_space.shape, dtype=np.float32)
         info = {}
-        self.reward_calculator.reset(self.player, self.game)
+        self.reward_calc.reset(self.player, self.game)
         return self.state, info
     
-    #todo
     def step(self, action):
         self.player.apply_action(action[:2])
         self.game.update(self.dt)
         self.state = self.__get_observation()
         terminated = self.player.hp <=0
         truncated = False
-        reward, info = self.reward_calculator.calculate(
+        reward, info = self.reward_calc.calculate(
             self.player,
             self.game,
             terminated)
